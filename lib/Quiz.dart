@@ -1,3 +1,5 @@
+
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'Score.dart';
 
@@ -13,6 +15,49 @@ class _QuizPageState extends State<QuizPage> {
   List<dynamic> selectedAnswers = [null, null, null];
   int score = 0;
 
+  final Map<Color, String> colorNames = {
+    Colors.red: "Red",
+    Colors.green: "Green",
+    Colors.blue: "Blue",
+    Colors.yellow: "Yellow",
+    Colors.orange: "Orange",
+    Colors.purple: "Purple",
+  };
+
+  late List<QuestionModel> questions;
+
+  @override
+  void initState() {
+    super.initState();
+    generateRandomQuestions();
+  }
+
+  void generateRandomQuestions() {
+    final random = Random();
+    final availableColors = colorNames.keys.toList();
+
+    questions = List.generate(3, (index) {
+      // random rectangle color
+      Color pickedColor = availableColors[random.nextInt(availableColors.length)];
+      String correctAnswer = colorNames[pickedColor]!;
+
+      // create options list containing correct answer & one random wrong answer
+      String wrongAnswer;
+      do {
+        wrongAnswer = colorNames[availableColors[random.nextInt(availableColors.length)]]!;
+      } while (wrongAnswer == correctAnswer);
+
+      // shuffle options
+      List<String> options = [correctAnswer, wrongAnswer]..shuffle();
+
+      return QuestionModel(
+        shapeColor: pickedColor,
+        options: options,
+        correctAnswer: correctAnswer,
+      );
+    });
+  }
+
   void updateAnswer(int index, dynamic value) {
     setState(() {
       selectedAnswers[index] = value;
@@ -20,109 +65,98 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void calculateScore() {
-    List<dynamic> correctAnswers = ["Red", "Green", "🌞"];
     int tempScore = 0;
-    for (int i = 0; i < correctAnswers.length; i++) {
-      if (selectedAnswers[i] == correctAnswers[i]) tempScore++;
+    for (int i = 0; i < questions.length; i++) {
+      if (selectedAnswers[i] == questions[i].correctAnswer) {
+        tempScore++;
+      }
     }
     setState(() {
       score = tempScore;
     });
-
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("🎉 Color Fun Zone!" ,
-          style: TextStyle(
-              fontWeight: FontWeight.bold ,
-              color: Colors.white),),
-
+        title: const Text(
+          "🎉 Color Fun Zone!",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         centerTitle: true,
         backgroundColor: Colors.deepPurpleAccent,
       ),
       backgroundColor: Colors.white,
-      body:
-      SingleChildScrollView(
-
+      body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Column(
           children: [
-            QuizQuestion(
-              shapeColor: Colors.red,
-              options: ["Red", "Blue"],
-              selectedAnswer: selectedAnswers[0],
-              onSelect: (val) => updateAnswer(0, val),
-            ),
-
-
-            QuizQuestion(
-              shapeColor: Colors.green,
-              options: ["Yellow", "Green"],
-              selectedAnswer: selectedAnswers[1],
-              onSelect: (val) => updateAnswer(1, val),
-            ),
-
-
-            QuizQuestion(
-              questionText: " Which one is YELLOW? 💛 ",
-              options: ["🌞", "☘️"],
-              selectedAnswer: selectedAnswers[2],
-              onSelect: (val) => updateAnswer(2, val),
-            ),
+            for (int i = 0; i < questions.length; i++)
+              QuizQuestion(
+                shapeColor: questions[i].shapeColor,
+                options: questions[i].options,
+                selectedAnswer: selectedAnswers[i],
+                onSelect: (val) => updateAnswer(i, val),
+              ),
 
             const SizedBox(height: 20),
 
             ElevatedButton(
               onPressed: () {
                 calculateScore();
-                // When pressed, navigate to the Score Page
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ScorePage(
                       score: score,
-                      totalQuestions: selectedAnswers.length,
+                      totalQuestions: questions.length,
                     ),
                   ),
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor:Colors.deepPurpleAccent,
-                padding:
-                const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                backgroundColor: Colors.deepPurpleAccent,
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text(
                 "Show My Score 🏆",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold ,
-                color: Colors.white),
+                style: TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ),
           ],
         ),
       ),
-
     );
   }
 }
 
+class QuestionModel {
+  final Color shapeColor;
+  final List<String> options;
+  final String correctAnswer;
+
+  QuestionModel({
+    required this.shapeColor,
+    required this.options,
+    required this.correctAnswer,
+  });
+}
+
 class QuizQuestion extends StatelessWidget {
-  final Color? shapeColor;
-  final String? questionText;
+  final Color shapeColor;
   final List<String> options;
   final dynamic selectedAnswer;
   final Function(dynamic) onSelect;
 
   const QuizQuestion({
     super.key,
-    this.shapeColor,
-    this.questionText,
+    required this.shapeColor,
     required this.options,
-    this.selectedAnswer,
+    required this.selectedAnswer,
     required this.onSelect,
   });
 
@@ -138,25 +172,18 @@ class QuizQuestion extends StatelessWidget {
       ),
       child: Column(
         children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: shapeColor,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.black26),
+            ),
+          ),
 
-          if (shapeColor != null)
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                  color: shapeColor,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.black26)),
-            ),
-          if (questionText != null)
-            Text(
-              questionText!,
-              style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87),
-            ),
           const SizedBox(height: 10),
+
           Column(
             children: options.map((option) {
               return RadioListTile<String>(
@@ -166,9 +193,7 @@ class QuizQuestion extends StatelessWidget {
                 title: Text(
                   option,
                   style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black),
+                      fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
                 ),
               );
             }).toList(),
