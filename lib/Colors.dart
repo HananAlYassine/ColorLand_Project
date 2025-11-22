@@ -40,6 +40,7 @@ class Page3 extends StatelessWidget {
         children: [
           const SizedBox(height: 40),
 
+
           // CIRCLE
           CircleAvatar(
             radius: 100,
