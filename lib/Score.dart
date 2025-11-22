@@ -1,0 +1,142 @@
+import 'package:flutter/material.dart';
+
+class ScorePage extends StatelessWidget {
+  final int score;
+  final int totalQuestions;
+
+  const ScorePage({
+    Key? key,
+    required this.score,
+    required this.totalQuestions,
+  }) : super(key: key);
+
+  String getEncouragingMessage() {
+    double percentage = (score / totalQuestions) * 100;
+
+    if (percentage == 100) {
+      return "🌟 Wow! Perfect Score! You're a Color Master! 🧠🎨";
+    } else if (percentage >= 80) {
+      return "🎉 Amazing! You really know your colors! 🌈";
+    } else if (percentage >= 60) {
+      return "😊 Great job! You’re getting better and better!";
+    } else if (percentage >= 40) {
+      return "💪 Good try! Keep practicing and you’ll shine!";
+    } else {
+      return "🌸 Don’t worry! Practice makes perfect! Try again! 🎨";
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double correctPercent = score / totalQuestions; // Between 0 and 1
+    double wrongPercent = 1 - correctPercent;
+
+    return Scaffold(
+      backgroundColor: Colors.purple[50],
+      appBar: AppBar(
+        title: const Text(
+          "🎯 Your Color Quiz Score",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.deepPurpleAccent,
+        centerTitle: true,
+      ),
+
+      body: Center(
+        child: Card(
+          color: Colors.white,
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          margin: const EdgeInsets.all(20),
+          child: Padding(
+            padding: const EdgeInsets.all(30.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Your Score:",
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.purple[800],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // 🌈 Green–Red Progress Bar
+                Stack(
+                  children: [
+                    // Red background (wrong answers)
+                    Container(
+                      width: 250,
+                      height: 25,
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+
+                    // Green foreground (correct answers)
+                    Container(
+                      width: 250 * correctPercent,
+                      height: 25,
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+                Text(
+                  "$score out of $totalQuestions correct 🌸",
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple,
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+                Text(
+                  getEncouragingMessage(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  label: const Text(
+                    "Back to Quiz Page",
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurpleAccent,
+                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
