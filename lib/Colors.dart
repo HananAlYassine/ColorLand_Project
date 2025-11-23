@@ -1,91 +1,167 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'ListView.dart';
 import 'Quiz.dart';
 
-class Page3 extends StatelessWidget {
+class Page3 extends StatefulWidget {
   final String colorName;
   final Color color;
 
-  const Page3({Key? key, required this.colorName, required this.color})
-      : super(key: key);
+  const Page3({Key? key, required this.colorName, required this.color}) : super(key: key);
+
+  @override
+  State<Page3> createState() => _Page3State();
+}
+
+class _Page3State extends State<Page3> {
+  late AudioPlayer _player;
+  bool _isPlaying = false;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initAudioPlayer();
+  }
+
+  Future<void> _initAudioPlayer() async {
+    _player = AudioPlayer();
+
+    // Set up event listeners
+    _player.onPlayerStateChanged.listen((PlayerState state) {
+      setState(() {
+        _isPlaying = state == PlayerState.playing;
+        _isLoading = state == PlayerState.playing ? false : _isLoading;
+      });
+    });
+
+    _player.onPlayerComplete.listen((event) {
+      setState(() {
+        _isPlaying = false;
+        _isLoading = false;
+      });
+    });
+
+    _player.onLog.listen((log) {
+      print('Audio Log: $log');
+    });
+  }
+
+  Future<void> _playColorAudio() async {
+    try {
+      if (_isPlaying) {
+        await _player.stop();
+      }
+
+      setState(() {
+        _isLoading = true;
+      });
+
+      final filename = "${widget.colorName.toLowerCase()}.mp3";
+      final assetPath = "assets_audio/$filename";
+
+      print("🎵 Attempting to play: $assetPath");
+
+      // Stop any current playback
+      await _player.stop();
+
+      // Small delay to ensure clean state
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      // Play the audio
+      await _player.play(AssetSource(assetPath));
+
+    } catch (e) {
+      print("❌ Audio error: $e");
+      setState(() {
+        _isLoading = false;
+        _isPlaying = false;
+      });
+
+      // Show error message to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Could not play audio. Please try again."),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _stopAudio() async {
+    try {
+      await _player.stop();
+      setState(() {
+        _isPlaying = false;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("Stop error: $e");
+    }
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-
-    // ----------- FIND CURRENT INDEX USING FOR LOOP ------------------
-    int currentIndex = 0;
-    for (int i = 0; i < colorsItem.length; i++) {
-      if (colorsItem[i].name == colorName) {
-        currentIndex = i;
-        break;
-      }
-    }
+    int currentIndex = colorsItem.indexWhere((c) => c.name == widget.colorName);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Let’s have fun learning colors today! 🖌️🌟',
+          'Let\'s have fun learning colors today! 🖌️🌟',
           style: TextStyle(
-            fontFamily: 'Comic Sans MS',
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+              fontFamily: 'Comic Sans MS',
+              fontWeight: FontWeight.bold,
+              color: Colors.white),
         ),
         centerTitle: true,
         backgroundColor: Colors.deepPurpleAccent,
       ),
-
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const SizedBox(height: 40),
-
-
-          // CIRCLE
           CircleAvatar(
             radius: 100,
-            backgroundColor: color,
+            backgroundColor: widget.color,
           ),
-
-          // COLOR NAME
           Text(
-            colorName,
+            widget.colorName,
             style: TextStyle(
               fontSize: 45,
               fontWeight: FontWeight.bold,
-              color: color,
+              color: widget.color,
               fontFamily: 'Comic Sans MS',
             ),
           ),
-
           const SizedBox(height: 10),
-
-          // ---------- Previous and Next Buttons For Colors --------------
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // PREVIOUS BUTTON (Previous Color)
               ElevatedButton(
-                onPressed: currentIndex == 0
+                onPressed: currentIndex <= 0
                     ? null
                     : () {
                   Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Page3(
-                        colorName: colorsItem[currentIndex - 1].name,
-                        color: colorsItem[currentIndex - 1].backgroundColor,
-                      ),
-                    ),
-                  );
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => Page3(
+                            colorName: colorsItem[currentIndex - 1].name,
+                            color: colorsItem[currentIndex - 1].backgroundColor,
+                          )));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurpleAccent,
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                 ),
                 child: const Row(
                   children: [
@@ -96,31 +172,23 @@ class Page3 extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(width: 25),
-
-              // NEXT BUTTON (Next Color)
               ElevatedButton(
-                onPressed: currentIndex == colorsItem.length - 1
+                onPressed: currentIndex >= colorsItem.length - 1
                     ? null
                     : () {
                   Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Page3(
-                        colorName: colorsItem[currentIndex + 1].name,
-                        color: colorsItem[currentIndex + 1].backgroundColor,
-                      ),
-                    ),
-                  );
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => Page3(
+                            colorName: colorsItem[currentIndex + 1].name,
+                            color: colorsItem[currentIndex + 1].backgroundColor,
+                          )));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurpleAccent,
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                 ),
                 child: const Row(
                   children: [
@@ -133,75 +201,68 @@ class Page3 extends StatelessWidget {
               ),
             ],
           ),
-
-          // ------------------------------------------------------
-          // BOTTOM BUTTONS
-          // ------------------------------------------------------
           Padding(
             padding: const EdgeInsets.only(bottom: 20.0, top: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-
-                // ---------- PREVIOUS PAGE BUTTON --------------------------
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Go back to Page2
-                },
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                label: const Text('Previous Page',
-                    style: TextStyle(color: Colors.white , fontSize: 20,)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurpleAccent,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
-                ),
-              ),
-
-
-                // ---------- VOICE BUTTON -----------------------
                 ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.volume_up, color: Colors.white),
-                  label: const Text('Voice',
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  label: const Text('Previous Page',
                       style: TextStyle(color: Colors.white, fontSize: 20)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurpleAccent,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 25, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   ),
                 ),
-
-                // ---------- Quiz PAGE BUTTON ---------------
                 ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const QuizPage()),
-                    );
-                  },
-                  icon: const Icon(Icons.quiz, color: Colors.white),
-                  label: const Text(
-                    'Quiz',
+                  onPressed: _isLoading
+                      ? null
+                      : (_isPlaying ? _stopAudio : _playColorAudio),
+                  icon: _isLoading
+                      ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                      : Icon(
+                      _isPlaying ? Icons.stop : Icons.volume_up,
+                      color: Colors.white
+                  ),
+                  label: Text(
+                    _isLoading ? 'Loading...' : (_isPlaying ? 'Stop' : 'Voice'),
                     style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: _isPlaying ? Colors.red : Colors.deepPurpleAccent,
+                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const QuizPage()));
+                  },
+                  icon: const Icon(Icons.quiz, color: Colors.white),
+                  label: const Text('Quiz',
+                      style: TextStyle(color: Colors.white, fontSize: 20)),
+                  style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurpleAccent,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 25, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   ),
                 ),
               ],
             ),
-          ),
+          )
         ],
       ),
     );
