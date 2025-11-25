@@ -102,27 +102,8 @@ class Page2 extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(height: 10),
-
-          // Back Button
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          //   children: [
-          //     ElevatedButton(
-          //       style: ElevatedButton.styleFrom(
-          //         backgroundColor: Colors.deepPurpleAccent,
-          //         foregroundColor: Colors.white,
-          //         shape: const CircleBorder(),
-          //         padding: const EdgeInsets.all(16),
-          //       ),
-          //       onPressed: () {
-          //         Navigator.of(context).pop();
-          //       },
-          //       child: const Icon(Icons.navigate_before, size: 40),
-          //     ),
-          //   ],
-          // ),
           const SizedBox(height: 20),
+
         ],
       ),
 
