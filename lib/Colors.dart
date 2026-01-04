@@ -48,6 +48,7 @@ class ColorItem {
 List<ColorItem> _colors = [];
 
 
+
 // ================= FETCH COLORS FROM SERVER =================
 // Asynchronously loads colors from backend and updates list
  void updateColors(Function(bool success) update) async {

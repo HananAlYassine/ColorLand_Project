@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'colors.dart';
 import 'global.dart';
 
+
 class Page2 extends StatefulWidget {
 
   const Page2({Key? key}) : super(key: key);
